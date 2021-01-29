@@ -141,7 +141,7 @@ def printWhoHasIncompleteGames(ct, playerStats):
 warStartTime = getWarStartPrefix()
 # warStartTime = "20210125T0930"
 # warStartTime = "20210127T1000"
-print("War day start is: "%warStartTime)
+print("War day start is: %s" % warStartTime )
 
 pss = getPlayerStats(cr.clanTagHW, warStartTime)
 printWhoHasIncompleteGames(cr.clanTagHW, pss)

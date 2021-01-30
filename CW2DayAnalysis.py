@@ -9,10 +9,10 @@ import CRLib as cr
 import CRIO as cri
 import sys
 
-class COptions:
+class CROptions:
     def __init__(self):
-        freshData = False # Do not read saved state from the data directory
-        readOnly = False # Persist battles into the data directory
+        self.freshData = False # Do not read saved state from the data directory
+        self.readOnly = False # Persist battles into the data directory
 
 class ClanData:
     def __init__(self):
@@ -110,7 +110,7 @@ def populateWarGames(playerTag, startTime, player):
 
 # Iterate through clan members, collect clan level stats, incomplete games, player stats
 # results are saved, and information gathering is resumed if the call is run again
-def getPlayerStats(ct, warStartTime), o:
+def getPlayerStats(ct, warStartTime, o):
 
     # Check if there is already a saved state available
     # TODO: control via option
@@ -197,7 +197,7 @@ def printUsageInformation():
 
 def main(argv):
 
-    o = COptions()
+    o = CROptions()
     if len (argv) == 0:
         printUsageInformation()
         exit()
@@ -212,9 +212,9 @@ def main(argv):
         printClanWarDayStats(cr.myClanTag, pss)
     elif cmd == "clans":
         warStartTime = getWarStartPrefix()
-        clanTags = cr.getRiverRaceClanList(cr.myClanTag, o)
+        clanTags = cr.getRiverRaceClanList(cr.myClanTag)
         for ct in clanTags:
-            pss = getPlayerStats(ct, warStartTime)
+            pss = getPlayerStats(ct, warStartTime, o)
             printClanWarDayStats(ct, pss)
     else:
         printUsageInformation()

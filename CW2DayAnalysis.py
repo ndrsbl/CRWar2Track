@@ -84,6 +84,12 @@ def populateWarGames(playerTag, startTime, player, ct, o):
 
             # opponent -> crowns (compare???), team [0] crowns???
 
+            # safety check in case Supercell sent stale data, or we loaded clan members from saved state, and someone
+            # new joined:
+            if playerTag not in playerTag:
+                playerTag[playerTag] = PlayerStats()
+
+
             if battleType=="riverRaceDuel" or battleType == "riverRaceDuelColosseum": 
                 defenderCrown = b["team"][0]["crowns"]
                 opponentCrown = b["opponent"][0]["crowns"]

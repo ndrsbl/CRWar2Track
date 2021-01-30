@@ -13,6 +13,7 @@ class CROptions:
     def __init__(self):
         self.freshData = False # Do not read saved state from the data directory
         self.readOnly = False # Persist battles into the data directory
+        self.debugBattles = False # Internal, debug battles (CR keeps changing things for the war!)
 
 class ClanData:
     def __init__(self):
@@ -41,7 +42,7 @@ def getWarStartPrefix():
     return timestamp
 
 # Per player gather war battles, and update clan level player stats
-def populateWarGames(playerTag, startTime, player, ct):
+def populateWarGames(playerTag, startTime, player, ct, o):
     r2=requests.get("https://api.clashroyale.com/v1/players/%23"+playerTag+"/battlelog", 
     headers = {"Accept":"application/json", "authorization":cr.auth}, 
     params = {"limit":100})
@@ -69,7 +70,8 @@ def populateWarGames(playerTag, startTime, player, ct):
             player[playerTag].limitedInfo = True
 
     for b in battles:
-        #print("%s %s %s"%(b["battleTime"], b["team"][0]["name"],b["type"]))
+        if o.debugBattles:
+            print("%s %s %s"%(b["battleTime"], b["team"][0]["name"],b["type"]))
         #print(json.dumps(b, indent = 2))
 
         battleType = b["type"]
@@ -139,7 +141,7 @@ def getPlayerStats(ct, warStartTime, o):
     for m in cr.clanMemberTags(ct):
         if not m in ps:
             ps[m] = PlayerStats()
-        populateWarGames(m, ts, ps, ct)
+        populateWarGames(m, ts, ps, ct, o)
 
     # serialize the data and save
     if not o.readOnly:
@@ -204,6 +206,20 @@ def printUsageInformation():
         """)
 
 
+# for development, eventually will get to something that will debug a single player
+def tmp_debug():
+    warStartTime = getWarStartPrefix()
+    ts, ps = warStartTime, dict()
+    playerTag = cr.myClanTag
+    
+    o = CROptions()
+    o.debugBattles = True
+    ps[playerTag] = PlayerStats()
+
+    populateWarGames(playerTag, warStartTime, ps, cr.myClanTag, o)
+
+
+
 def main(argv):
 
     o = CROptions()
@@ -230,6 +246,8 @@ def main(argv):
         for ct in clanTags:
             pss = getPlayerStats(ct, warStartTime, o)
             printClanWarDayStats(ct, pss)
+    elif cmd == "debug1":
+        tmp_debug()
     else:
         printUsageInformation()
 

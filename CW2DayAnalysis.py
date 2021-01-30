@@ -7,9 +7,7 @@ import json
 import itertools
 import CRLib as cr
 import CRIO as cri
-
-
-# riverClanTags = getRiverRaceClanList(cr.myClanTag)
+import sys
 
 class ClanData:
     def __init__(self):
@@ -137,7 +135,7 @@ def printClanWarDayStats(ct, playerStats):
     for key, value in playerStats.items():
         cd.battlesWon += value.battlesWon
         cd.battlesPlayed += value.battlesPlayed
-        if cd.battlesPlayed > 0:
+        if value.battlesPlayed > 0:
             participants += 1
 
     if cd.battlesPlayed == 0:
@@ -159,15 +157,48 @@ def printWhoHasIncompleteGames(ct, playerStats):
 
 
 
-warStartTime = getWarStartPrefix()
-# warStartTime = "20210125T0930"
-# warStartTime = "20210127T1000"
-print("War day start is: %s" % warStartTime )
 
-pss = getPlayerStats(cr.myClanTag, warStartTime)
-printWhoHasIncompleteGames(cr.myClanTag, pss)
+def printUsageInformation():
+    print("""
+        This script will help with managing your Clash Royale Clan War 2 participation.
+        Use the following arguments:
+            battles
+                Prints every clan member in the clan, and the number of war day battles completed. Note
+                that only limited battle information is available from Supercel. This script queries 
+                Supercel, saves the results, and subsequent calls to the script will incrementally
+                update the data, so regular use will improve data accuracy.
+                The clan members are printed in reverse order of number of war day battles played.
+            clan
+                Privides war day statistics for your clan
+            clans
+                Identifies all the river race clans for your clan, runs a war day statistics on them, and 
+                indicates participation and win ratio for the last war day. Limited game result is available 
+                from Supercel, but if you run this regularly the information from Supercel is persisted, 
+                and the accuracy of the information will be better.
+        """)
 
 
-# printClanWarDayStats(cr.myClanTag, pss)
-# pss = getPlayerStats("29R0YQ09", warStartTime)
-# printClanWarDayStats("29R0YQ09", pss)
+def main(argv):
+    if len (argv) == 0:
+        printUsageInformation()
+        exit()
+    cmd = argv[0]
+    if cmd == "battles":
+        warStartTime = getWarStartPrefix()
+        pss = getPlayerStats(cr.myClanTag, warStartTime)
+        printWhoHasIncompleteGames(cr.myClanTag, pss)
+    elif cmd == "clan":
+        warStartTime = getWarStartPrefix()
+        pss = getPlayerStats(cr.myClanTag, warStartTime)
+        printClanWarDayStats(cr.myClanTag, pss)
+    elif cmd == "clans":
+        warStartTime = getWarStartPrefix()
+        clanTags = cr.getRiverRaceClanList(cr.myClanTag)
+        for ct in clanTags:
+            pss = getPlayerStats(ct, warStartTime)
+            printClanWarDayStats(ct, pss)
+    else:
+        printUsageInformation()
+
+if __name__ == "__main__":
+    main(sys.argv[1:])

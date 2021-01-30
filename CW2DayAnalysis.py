@@ -133,9 +133,12 @@ def getPlayerStats(ct, warStartTime):
 def printClanWarDayStats(ct, playerStats):
     cd = ClanData()
     clanName = cr.getClanName(ct)
+    participants = 0
     for key, value in playerStats.items():
         cd.battlesWon += value.battlesWon
         cd.battlesPlayed += value.battlesPlayed
+        if cd.battlesPlayed > 0:
+            participants += 1
 
     if cd.battlesPlayed == 0:
         winRatio = 0
@@ -143,7 +146,7 @@ def printClanWarDayStats(ct, playerStats):
         winRatio = round(100*cd.battlesWon/cd.battlesPlayed,2)
 
     print("%s: %s war battles played, %s won (%s%% win rate), %s members participated"%
-        (clanName,cd.battlesPlayed, cd.battlesWon, winRatio, len(playerStats)))
+        (clanName,cd.battlesPlayed, cd.battlesWon, winRatio, participants))
 
 # Print the players and the number of war games completed during the active war two day
 def printWhoHasIncompleteGames(ct, playerStats):

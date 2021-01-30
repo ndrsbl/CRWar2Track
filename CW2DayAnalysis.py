@@ -9,7 +9,7 @@ import CRLib as cr
 import CRIO as cri
 
 
-riverClanTags = ["JP8VUC","2Q9JYY9J", cr.clanTagHW, "29R0YQ09", "8UUP909U"]
+# riverClanTags = getRiverRaceClanList(cr.clanTagHW)
 
 class ClanData:
     def __init__(self):

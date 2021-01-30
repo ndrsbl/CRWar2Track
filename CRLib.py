@@ -41,3 +41,16 @@ def clanMemberTags(ct):
     for m in members:
         tags.append(m["tag"][1:])
     return tags   
+
+
+# Given a clan tag return the clan tags in the current river race
+def getRiverRaceClanList(ct):
+    r2=requests.get("https://api.clashroyale.com/v1/clans/%23"+ct+"/currentriverrace", 
+    headers = {"Accept":"application/json", "authorization":cr.auth}, 
+    params = {"limit":10})
+    clans = r2.json()["clans"]
+    rv = []
+    for c in clans:
+        print(json.dumps(c, indent = 2))
+        rv.append(c["tag"])
+    return rv

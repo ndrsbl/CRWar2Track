@@ -41,7 +41,7 @@ def getWarStartPrefix():
     return timestamp
 
 # Per player gather war battles, and update clan level player stats
-def populateWarGames(playerTag, startTime, player):
+def populateWarGames(playerTag, startTime, player, ct):
     r2=requests.get("https://api.clashroyale.com/v1/players/%23"+playerTag+"/battlelog", 
     headers = {"Accept":"application/json", "authorization":cr.auth}, 
     params = {"limit":100})
@@ -87,6 +87,11 @@ def populateWarGames(playerTag, startTime, player):
                 opponentCrown = b["opponent"][0]["crowns"]
                 # print("%s %s by %s  %s:%s"%(b["battleTime"], b["type"], cr.getPlayerName(playerTag),defenderCrown, opponentCrown))
                 # print("Team Card length:%s" % len(b["team"][0]["cards"]))
+
+                # extra validation (people can move clans, and we want only our wars to be considered!)
+                if b["team"][0]["clan"]["tag"][1:] != ct:
+                    continue # this is not for our clan!
+
                 gameCount = len(b["team"][0]["cards"]) / 8
                 if(defenderCrown>opponentCrown): # won the duel
                    player[playerTag].battlesWon += gameCount
@@ -95,6 +100,10 @@ def populateWarGames(playerTag, startTime, player):
                 
                 
             elif battleType=="riverRacePvP":
+                # extra validation (people can move clans, and we want only our wars to be considered!)
+                if b["team"][0]["clan"]["tag"][1:] != ct:
+                    continue # this is not for our clan!
+
                 defenderCrown = b["team"][0]["crowns"]
                 opponentCrown = b["opponent"][0]["crowns"]
                 if(defenderCrown>opponentCrown): # won the battle
@@ -130,7 +139,7 @@ def getPlayerStats(ct, warStartTime, o):
     for m in cr.clanMemberTags(ct):
         if not m in ps:
             ps[m] = PlayerStats()
-        populateWarGames(m, ts, ps)
+        populateWarGames(m, ts, ps, ct)
 
     # serialize the data and save
     if not o.readOnly:
@@ -198,6 +207,11 @@ def printUsageInformation():
 def main(argv):
 
     o = CROptions()
+
+    # for debugging:
+    # o.freshData = True
+    # o.readOnly = True
+
     if len (argv) == 0:
         printUsageInformation()
         exit()

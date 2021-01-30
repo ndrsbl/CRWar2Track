@@ -6,6 +6,7 @@ import requests
 import json
 import itertools
 import CRLib as cr
+import CRIO as cri
 
 
 riverClanTags = ["JP8VUC","2Q9JYY9J", cr.clanTagHW, "29R0YQ09", "8UUP909U"]
@@ -37,7 +38,7 @@ def getWarStartPrefix():
     return timestamp
 
 # Per player gather war battles, and update clan level player stats
-def populateWarGames(playerTag, warStartTime, player):
+def populateWarGames(playerTag, startTime, player):
     r2=requests.get("https://api.clashroyale.com/v1/players/%23"+playerTag+"/battlelog", 
     headers = {"Accept":"application/json", "authorization":cr.auth}, 
     params = {"limit":100})
@@ -60,8 +61,9 @@ def populateWarGames(playerTag, warStartTime, player):
         # get the last timestamp (battles are newest first)
     if len(battles) > 0:
         b = battles[-1]
-        if warStartTime < b["battleTime"]: # this should be the oldest game
-                player[playerTag].limitedInfo = True
+        if startTime < b["battleTime"]: # this should be the oldest game
+            # TODO: CR returns a lot of garbage: it sometimes includes ancient boat battles. Could filter these out?
+            player[playerTag].limitedInfo = True
 
     for b in battles:
         #print("%s %s %s"%(b["battleTime"], b["team"][0]["name"],b["type"]))
@@ -71,7 +73,7 @@ def populateWarGames(playerTag, warStartTime, player):
         if((battleType=="riverRaceDuel"  
             or battleType=="riverRaceDuelColosseum"  
             or battleType=="riverRacePvP" 
-            or battleType=="boatBattle") and warStartTime < b["battleTime"]):
+            or battleType=="boatBattle") and startTime < b["battleTime"]):
             #print (json.dumps(b, indent = 2))
             #print("%s %s"%(b["battleTime"], b["type"]))
 
@@ -101,13 +103,29 @@ def populateWarGames(playerTag, warStartTime, player):
 
 
 # Iterate through clan members, collect clan level stats, incomplete games, player stats
+# results are saved, and information gathering is resumed if the call is run again
 def getPlayerStats(ct, warStartTime):
-    ps = dict()
 
+    # Check if there is already a saved state available
+    # TODO: control via option
+    # TODO: log!
+    rv = cri.loadGameState(ct, warStartTime)
+    if rv is not None:
+        (ts, ps) = rv
+    else:
+        ts, ps = warStartTime, dict()
+
+    dataCollectedAt = datetime.utcnow().strftime("%Y%m%dT%H%M") # for serialization later
+
+    # populate the player data from supercel
     for m in cr.clanMemberTags(ct):
         if not m in ps:
             ps[m] = PlayerStats()
-        populateWarGames(m, warStartTime, ps)
+        populateWarGames(m, ts, ps)
+
+    # serialize the data and save
+    cri.saveGameState(ct, warStartTime, dataCollectedAt, ps)
+
     return ps
 
 
@@ -147,4 +165,6 @@ pss = getPlayerStats(cr.clanTagHW, warStartTime)
 printWhoHasIncompleteGames(cr.clanTagHW, pss)
 
 
-
+# printClanWarDayStats(cr.clanTagHW, pss)
+# pss = getPlayerStats("29R0YQ09", warStartTime)
+# printClanWarDayStats("29R0YQ09", pss)

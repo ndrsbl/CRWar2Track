@@ -8,6 +8,8 @@ import itertools
 import CRLib as cr
 import CRIO as cri
 import sys
+import argparse
+
 
 class CROptions:
     def __init__(self):
@@ -214,6 +216,7 @@ def printUsageInformation():
 
 # for development, eventually will get to something that will debug a single player
 def tmp_debug():
+    print("DEBUG!!")
     warStartTime = getWarStartPrefix()
     ts, ps = warStartTime, dict()
     playerTag = cr.myClanTag
@@ -226,18 +229,21 @@ def tmp_debug():
 
 
 
-def main(argv):
-
+def main(args):
     o = CROptions()
+    if args.readonly:
+        o.freshData = True
+        o.readOnly = True
+    if args.freshdata:
+        o.freshData = True
+    if args.nosave:        
+        o.readOnly = True
 
-    # for debugging:
-    # o.freshData = True
-    # o.readOnly = True
 
-    if len (argv) == 0:
+    if len (args.command) == 0:
         printUsageInformation()
         exit()
-    cmd = argv[0]
+    cmd = args.command[0]
     if cmd == "battles":
         warStartTime = getWarStartPrefix()
         pss = getPlayerStats(cr.myClanTag, warStartTime, o)
@@ -258,4 +264,13 @@ def main(argv):
         printUsageInformation()
 
 if __name__ == "__main__":
-    main(sys.argv[1:])
+    parser = argparse.ArgumentParser()
+    parser.add_argument('command', nargs=1, choices=['battles', 'clan', 'clans', 'debug1'],
+                        help='command indicating the type of war analytics to return')
+    parser.add_argument('-r', '--readonly', action="store_true")
+    parser.add_argument('-f', '--freshdata', action="store_true")
+    parser.add_argument('-n', '--nosave', action="store_true")
+
+    args = parser.parse_args()
+    main(args)
+

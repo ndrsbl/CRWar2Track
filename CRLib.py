@@ -4,7 +4,7 @@ import json
 import itertools
 
 
-clanTagHW = "YJCGRV9" # Heavyweights
+myClanTag = "YJCGRV9" # Heavyweights
 memberTagDrKot = "8YPRYCC8R" # drKot 
 
 def loadAuth():

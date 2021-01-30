@@ -9,7 +9,7 @@ import CRLib as cr
 import CRIO as cri
 
 
-# riverClanTags = getRiverRaceClanList(cr.clanTagHW)
+# riverClanTags = getRiverRaceClanList(cr.myClanTag)
 
 class ClanData:
     def __init__(self):
@@ -164,10 +164,10 @@ warStartTime = getWarStartPrefix()
 # warStartTime = "20210127T1000"
 print("War day start is: %s" % warStartTime )
 
-pss = getPlayerStats(cr.clanTagHW, warStartTime)
-printWhoHasIncompleteGames(cr.clanTagHW, pss)
+pss = getPlayerStats(cr.myClanTag, warStartTime)
+printWhoHasIncompleteGames(cr.myClanTag, pss)
 
 
-# printClanWarDayStats(cr.clanTagHW, pss)
+# printClanWarDayStats(cr.myClanTag, pss)
 # pss = getPlayerStats("29R0YQ09", warStartTime)
 # printClanWarDayStats("29R0YQ09", pss)

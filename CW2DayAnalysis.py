@@ -9,6 +9,11 @@ import CRLib as cr
 import CRIO as cri
 import sys
 
+class COptions:
+    def __init__(self):
+        freshData = False # Do not read saved state from the data directory
+        readOnly = False # Persist battles into the data directory
+
 class ClanData:
     def __init__(self):
         self.battlesWon = 0
@@ -86,6 +91,7 @@ def populateWarGames(playerTag, startTime, player):
                 if(defenderCrown>opponentCrown): # won the duel
                    player[playerTag].battlesWon += gameCount
                 player[playerTag].battlesPlayed += gameCount
+                player[playerTag].name = b["team"][0]["name"]
                 
                 
             elif battleType=="riverRacePvP":
@@ -94,24 +100,29 @@ def populateWarGames(playerTag, startTime, player):
                 if(defenderCrown>opponentCrown): # won the battle
                     player[playerTag].battlesWon += 1
                 player[playerTag].battlesPlayed += 1 
+                player[playerTag].name = b["team"][0]["name"]
 
             else: # boatBattle
                 player[playerTag].battlesPlayed += 1
                 player[playerTag].boatAttacks += 1
+                # TODO: can I get the name here?!!
 
 
 # Iterate through clan members, collect clan level stats, incomplete games, player stats
 # results are saved, and information gathering is resumed if the call is run again
-def getPlayerStats(ct, warStartTime):
+def getPlayerStats(ct, warStartTime), o:
 
     # Check if there is already a saved state available
     # TODO: control via option
     # TODO: log!
-    rv = cri.loadGameState(ct, warStartTime)
-    if rv is not None:
-        (ts, ps) = rv
-    else:
+    if o.freshData:
         ts, ps = warStartTime, dict()
+    else:
+        rv = cri.loadGameState(ct, warStartTime)
+        if rv is not None:
+            (ts, ps) = rv
+        else:
+            ts, ps = warStartTime, dict()
 
     dataCollectedAt = datetime.utcnow().strftime("%Y%m%dT%H%M") # for serialization later
 
@@ -122,7 +133,8 @@ def getPlayerStats(ct, warStartTime):
         populateWarGames(m, ts, ps)
 
     # serialize the data and save
-    cri.saveGameState(ct, warStartTime, dataCollectedAt, ps)
+    if not o.readOnly:
+        cri.saveGameState(ct, warStartTime, dataCollectedAt, ps)
 
     return ps
 
@@ -153,7 +165,12 @@ def printWhoHasIncompleteGames(ct, playerStats):
             caveatMsg = "25+ games since war start"
         else:
             caveatMsg = ""
-        print("%s: %s %s" % (cr.getPlayerName(key),int(value.battlesPlayed), caveatMsg))
+
+        if value.name == "":
+            playerName = cr.getPlayerName(key)
+        else:
+            playerName = value.name
+        print("%s: %s %s" % (playerName,int(value.battlesPlayed), caveatMsg))
 
 
 
@@ -179,21 +196,23 @@ def printUsageInformation():
 
 
 def main(argv):
+
+    o = COptions()
     if len (argv) == 0:
         printUsageInformation()
         exit()
     cmd = argv[0]
     if cmd == "battles":
         warStartTime = getWarStartPrefix()
-        pss = getPlayerStats(cr.myClanTag, warStartTime)
+        pss = getPlayerStats(cr.myClanTag, warStartTime, o)
         printWhoHasIncompleteGames(cr.myClanTag, pss)
     elif cmd == "clan":
         warStartTime = getWarStartPrefix()
-        pss = getPlayerStats(cr.myClanTag, warStartTime)
+        pss = getPlayerStats(cr.myClanTag, warStartTime, o)
         printClanWarDayStats(cr.myClanTag, pss)
     elif cmd == "clans":
         warStartTime = getWarStartPrefix()
-        clanTags = cr.getRiverRaceClanList(cr.myClanTag)
+        clanTags = cr.getRiverRaceClanList(cr.myClanTag, o)
         for ct in clanTags:
             pss = getPlayerStats(ct, warStartTime)
             printClanWarDayStats(ct, pss)

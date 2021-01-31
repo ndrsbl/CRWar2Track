@@ -16,6 +16,7 @@ class CROptions:
         self.freshData = False # Do not read saved state from the data directory
         self.readOnly = False # Persist battles into the data directory
         self.debugBattles = False # Internal, debug battles (CR keeps changing things for the war!)
+        self.historical = False # Only load historical data, and do not gather this from Supercel
 
 class ClanData:
     def __init__(self):

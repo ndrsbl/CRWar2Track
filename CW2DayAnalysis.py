@@ -262,6 +262,9 @@ def main(args):
         for ct in clanTags:
             pss = getPlayerStats(ct, warStartTime, o)
             printClanWarDayStats(ct, pss)
+    elif cmd == "purge":
+        # purge old historical files, but keep one per war day
+        cri.purgeGameState()
     elif cmd == "debug1":
         tmp_debug()
     else:
@@ -269,7 +272,7 @@ def main(args):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument('command', nargs=1, choices=['battles', 'clan', 'clans', 'debug1'],
+    parser.add_argument('command', nargs=1, choices=['battles', 'clan', 'clans', 'purge', 'debug1'],
                         help='command indicating the type of war analytics to return')
     parser.add_argument('-r', '--readonly', action="store_true")
     parser.add_argument('-f', '--freshdata', action="store_true")

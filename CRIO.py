@@ -1,6 +1,7 @@
 import pickle
 import glob
 import os
+import itertools
 
 
 # Saves the GameState at a particular timestamp
@@ -24,3 +25,33 @@ def loadGameState(clantTag, warStart):
             dd = pickle.load(file)
             return (ts, dd)
     return None
+
+
+
+# Generate a grouping key for a filename to identify one data file per day per clan
+# The filename format is clan-warday-timestamp
+def genKey(fileName):
+    parts = fileName.split('-')
+    if len(parts) < 3:
+        return None # junk data?
+    prefix = f"{parts[0]}-{parts[1]}"
+    return prefix
+
+
+# cleans up historical data files, keeps the latest for each day
+def purgeGameState():
+    if not os.path.exists('./data/'):
+        return
+    prefix = "./data/"
+    files = glob.glob(prefix + "*.pic")
+    files.sort()
+    for k,v in itertools.groupby(files, key = genKey):
+        filesToDelete = list(v)
+        filesToDelete.sort()
+        filesToDelete = filesToDelete[:-1]
+        for f in filesToDelete:
+            try:
+                os.remove(f)
+            except OSError as e:
+                print(f"Error: Cannot delete {f}, {e.strerror}")
+

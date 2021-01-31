@@ -73,7 +73,7 @@ def populateWarGames(playerTag, startTime, player, ct, o):
 
     for b in battles:
         if o.debugBattles:
-            print("%s %s %s"%(b["battleTime"], b["team"][0]["name"],b["type"]))
+            print(f'b["battleTime"] b["team"][0]["name"] b["type"]')
         #print(json.dumps(b, indent = 2))
 
         battleType = b["type"]
@@ -82,7 +82,7 @@ def populateWarGames(playerTag, startTime, player, ct, o):
             or battleType=="riverRacePvP" 
             or battleType=="boatBattle") and startTime < b["battleTime"]):
             #print (json.dumps(b, indent = 2))
-            #print("%s %s"%(b["battleTime"], b["type"]))
+            #print(f'b["battleTime"], b["type"]')
 
             # opponent -> crowns (compare???), team [0] crowns???
 
@@ -96,7 +96,7 @@ def populateWarGames(playerTag, startTime, player, ct, o):
                 defenderCrown = b["team"][0]["crowns"]
                 opponentCrown = b["opponent"][0]["crowns"]
                 # print("%s %s by %s  %s:%s"%(b["battleTime"], b["type"], cr.getPlayerName(playerTag),defenderCrown, opponentCrown))
-                # print("Team Card length:%s" % len(b["team"][0]["cards"]))
+                #print("Team Card length:%s" % len(b["team"][0]["cards"]))
 
                 # extra validation (people can move clans, and we want only our wars to be considered!)
                 if b["team"][0]["clan"]["tag"][1:] != ct:
@@ -174,8 +174,8 @@ def printClanWarDayStats(ct, playerStats):
     else:        
         winRatio = round(100*cd.battlesWon/cd.battlesPlayed,2)
 
-    print("%s: %s war battles played, %s won (%s%% win rate), %s members participated"%
-        (clanName,cd.battlesPlayed, cd.battlesWon, winRatio, participants))
+    print(f"{clanName}: {cd.battlesPlayed} war battles played, {cd.battlesWon} " +
+        f"won ({winRatio}% win rate), {participants} members participated")
 
 # Print the players and the number of war games completed during the active war two day
 def printWhoHasIncompleteGames(ct, playerStats):
@@ -189,7 +189,8 @@ def printWhoHasIncompleteGames(ct, playerStats):
             playerName = cr.getPlayerName(key)
         else:
             playerName = value.name
-        print("%s: %s %s" % (playerName,int(value.battlesPlayed), caveatMsg))
+        #print("%s: %s %s" % (playerName,int(value.battlesPlayed), caveatMsg))
+        print(f"{playerName}:{int(value.battlesPlayed)} {caveatMsg}")
 
 
 

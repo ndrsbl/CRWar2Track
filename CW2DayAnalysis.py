@@ -146,10 +146,11 @@ def getPlayerStats(ct, warStartTime, o):
     dataCollectedAt = datetime.utcnow().strftime("%Y%m%dT%H%M") # for serialization later
 
     # populate the player data from supercel
-    for m in cr.clanMemberTags(ct):
-        if not m in ps:
-            ps[m] = PlayerStats()
-        populateWarGames(m, ts, ps, ct, o)
+    if not o.historical:
+        for m in cr.clanMemberTags(ct):
+            if not m in ps:
+                ps[m] = PlayerStats()
+            populateWarGames(m, ts, ps, ct, o)
 
     # serialize the data and save
     if not o.readOnly:
@@ -189,7 +190,6 @@ def printWhoHasIncompleteGames(ct, playerStats):
             playerName = cr.getPlayerName(key)
         else:
             playerName = value.name
-        #print("%s: %s %s" % (playerName,int(value.battlesPlayed), caveatMsg))
         print(f"{playerName}:{int(value.battlesPlayed)} {caveatMsg}")
 
 
@@ -239,6 +239,9 @@ def main(args):
         o.freshData = True
     if args.nosave:        
         o.readOnly = True
+    if args.historical:        
+        o.historical = True        
+        o.readOnly = True
 
 
     if len (args.command) == 0:
@@ -271,6 +274,8 @@ if __name__ == "__main__":
     parser.add_argument('-r', '--readonly', action="store_true")
     parser.add_argument('-f', '--freshdata', action="store_true")
     parser.add_argument('-n', '--nosave', action="store_true")
+    parser.add_argument('-i', '--historical', action="store_true"),
+        #help='Only load saved data, do no query supercell for war log')
 
     args = parser.parse_args()
     main(args)

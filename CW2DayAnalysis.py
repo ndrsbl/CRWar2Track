@@ -123,9 +123,9 @@ def populateWarGames(playerTag, startTime, player, ct, o):
                 player[playerTag].name = b["team"][0]["name"]
 
             else: # boatBattle
-                player[playerTag].battlesPlayed += 1
-                player[playerTag].boatAttacks += 1
-                # TODO: can I get the name here?!!
+                if b["boatBattleSide"] == "attacker":
+                    player[playerTag].battlesPlayed += 1
+                    player[playerTag].boatAttacks += 1
 
 
 # Iterate through clan members, collect clan level stats, incomplete games, player stats

@@ -22,6 +22,7 @@ class ClanData:
     def __init__(self):
         self.battlesWon = 0
         self.battlesPlayed = 0
+        self.boatAttacks = 0
 
 
 # The stats for a single player, war day won, lost, 
@@ -165,19 +166,22 @@ def printClanWarDayStats(ct, playerStats):
     cd = ClanData()
     clanName = cr.getClanName(ct)
     participants = 0
+    boatattacks = 0
     for key, value in playerStats.items():
         cd.battlesWon += value.battlesWon
         cd.battlesPlayed += value.battlesPlayed
+        cd.boatAttacks += value.boatAttacks
         if value.battlesPlayed > 0:
             participants += 1
+        
 
     if cd.battlesPlayed == 0:
         winRatio = 0
     else:        
         winRatio = round(100*cd.battlesWon/cd.battlesPlayed,2)
 
-    print(f"{clanName}: {cd.battlesPlayed} war battles played, {cd.battlesWon} " +
-        f"won ({winRatio}% win rate), {participants} members participated")
+    print(f"{clanName}: {cd.battlesPlayed} war battles, {cd.battlesWon} " +
+        f"won ({winRatio}% win rate), {cd.boatAttacks} boat attacks, {participants} participated")
 
 # Print the players and the number of war games completed during the active war two day
 def printWhoHasIncompleteGames(ct, playerStats):

@@ -54,3 +54,13 @@ def getRiverRaceClanList(ct):
         rv.append(c["tag"][1:])
     return rv
     
+
+
+def reformatCRTimestamp(s):
+    try:
+        dt = datetime.strptime(s, '%Y%m%dT%H%M%S.000Z')
+    except ValueError as e:
+        dt = datetime.min
+
+    return dt.strftime('%Y-%m-%d %H:%M:%S')
+

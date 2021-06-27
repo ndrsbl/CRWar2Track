@@ -106,7 +106,8 @@ def populateWarGames(playerTag, startTime, player, ct, o):
                 defenderCrown = b["team"][0]["crowns"]
                 opponentCrown = b["opponent"][0]["crowns"]
                 if o.debugBattles:
-                    print(f'DEBUG: {b["team"][0]["clan"]["tag"][1:]}@{b["battleTime"]} {cr.getPlayerName(playerTag)} duel {defenderCrown}:{opponentCrown}')
+                    print(f'DEBUG: {b["team"][0]["clan"]["tag"][1:]} {cr.reformatCRTimestamp(b["battleTime"])} '\
+                        f'{cr.getPlayerName(playerTag)} duel {defenderCrown}:{opponentCrown}')
 
                 # extra validation (people can move clans, and we want only our wars to be considered!)
                 if b["team"][0]["clan"]["tag"][1:] != ct:
@@ -136,7 +137,8 @@ def populateWarGames(playerTag, startTime, player, ct, o):
                     continue # this is not for our clan!
 
                 if o.debugBattles:
-                    print(f'DEBUG: {b["team"][0]["clan"]["tag"][1:]}@{b["battleTime"]} {cr.getPlayerName(playerTag)} 1v1')
+                    print(f'DEBUG: {b["team"][0]["clan"]["tag"][1:]} {cr.reformatCRTimestamp(b["battleTime"])}'\
+                        f' {cr.getPlayerName(playerTag)} 1v1')
 
 
 
@@ -150,7 +152,8 @@ def populateWarGames(playerTag, startTime, player, ct, o):
             else: # boatBattle
                 if b["boatBattleSide"] == "attacker":
                     if o.debugBattles:
-                        print(f'DEBUG: {b["team"][0]["clan"]["tag"][1:]}@{b["battleTime"]} {cr.getPlayerName(playerTag)} boat attack')
+                        print(f'DEBUG: {b["team"][0]["clan"]["tag"][1:]} {cr.reformatCRTimestamp(b["battleTime"])}'\
+                        f' {cr.getPlayerName(playerTag)} boat attack')
 
 
                     player[playerTag].battlesPlayed += 1
@@ -158,7 +161,9 @@ def populateWarGames(playerTag, startTime, player, ct, o):
                 else:
                     # Our boat got attacked:
                     if o.debugBattles:
-                        print(f'DEBUG: {b["team"][0]["clan"]["tag"][1:]}@{b["battleTime"]} {cr.getPlayerName(playerTag)} won={b["boatBattleWon"]} new_towers_destroyed={b["newTowersDestroyed"]} boat attacked by {b["opponent"][0]["clan"]["name"]}')
+                        print(f'DEBUG: {b["team"][0]["clan"]["tag"][1:]} {cr.reformatCRTimestamp(b["battleTime"])}'\
+                        f' {cr.getPlayerName(playerTag)} won={b["boatBattleWon"]}'\
+                        f' new_towers_destroyed={b["newTowersDestroyed"]} boat attacked by {b["opponent"][0]["clan"]["name"]}')
                     #print (json.dumps(b, indent = 2))
 
 # Iterate through clan members, collect clan level stats, incomplete games, player stats

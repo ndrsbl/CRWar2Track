@@ -91,12 +91,12 @@ def duelOpponentCrowns(b):
 
 def duelBattlesWon(b):
     try:
-        defenderCrown = Battle.duelDefenderCrowns(b)
-        opponentCrown = Battle.duelOpponentCrowns(b)
+        defenderCrown = duelDefenderCrowns(b)
+        opponentCrown = duelOpponentCrowns(b)
 
         if duelGameCount(b) == 2:
             if(defenderCrown>opponentCrown): # won the duel
-                return duelGameCount
+                return 2
             else:
                 # 3 games, 1:2 - look at the tower damage in the last one!
                 if duelWon(b):
@@ -105,3 +105,4 @@ def duelBattlesWon(b):
                     return 1
     except:
         return 0
+    return 0

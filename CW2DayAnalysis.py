@@ -105,15 +105,16 @@ def populateWarGames(playerTag, startTime, player, ct, o):
             if battleType=="riverRaceDuel" or battleType == "riverRaceDuelColosseum": 
                 defenderCrown = b["team"][0]["crowns"]
                 opponentCrown = b["opponent"][0]["crowns"]
+
+                gameCount = len(b["team"][0]["cards"]) / 8
+
                 if o.debugBattles:
                     print(f'DEBUG: {b["team"][0]["clan"]["tag"][1:]} {cr.reformatCRTimestamp(b["battleTime"])} '\
-                        f'{cr.getPlayerName(playerTag)} duel {defenderCrown}:{opponentCrown}')
+                        f'{cr.getPlayerName(playerTag)} duel {defenderCrown}:{opponentCrown} [{gameCount}]')
 
                 # extra validation (people can move clans, and we want only our wars to be considered!)
                 if b["team"][0]["clan"]["tag"][1:] != ct:
                     continue # this is not for our clan!
-
-                gameCount = len(b["team"][0]["cards"]) / 8
 
                 if gameCount == 2:
                     if(defenderCrown>opponentCrown): # won the duel

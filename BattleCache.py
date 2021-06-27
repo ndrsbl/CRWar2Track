@@ -85,4 +85,3 @@ class Battles:
     ## TODO: purge the history for a player
     def purgeState(self, ps):
         pass
-

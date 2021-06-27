@@ -9,7 +9,7 @@ import CRLib as cr
 import CRIO as cri
 import sys
 import argparse
-import Battle as b
+import Battle
 
 
 class CROptions:
@@ -87,14 +87,12 @@ def populateWarGames(playerTag, startTime, player, ct, o):
             #print(f'b["battleTime"] b["team"][0]["name"] b["type"]')
             #print(json.dumps(b, indent = 2))
 
-        battleType = b["type"]
+        battleType = Battle.battleType(b)
+        battleTime = Battle.battleTime(b)
         if((battleType=="riverRaceDuel"  
             or battleType=="riverRaceDuelColosseum"  
             or battleType=="riverRacePvP" 
-            or battleType=="boatBattle") and startTime <= b["battleTime"]):
-            #print (json.dumps(b, indent = 2))
-            #print(f'b["battleTime"], b["type"]')
-
+            or battleType=="boatBattle") and startTime <= battleTime):
             # opponent -> crowns (compare???), team [0] crowns???
 
             # safety check in case Supercell sent stale data, or we loaded clan members from saved state, and someone
@@ -103,31 +101,21 @@ def populateWarGames(playerTag, startTime, player, ct, o):
                 playerTag[playerTag] = PlayerStats()
 
 
-            if battleType=="riverRaceDuel" or battleType == "riverRaceDuelColosseum": 
-                defenderCrown = b["team"][0]["crowns"]
-                opponentCrown = b["opponent"][0]["crowns"]
+            if Battle.isDuel(b): 
+                defenderCrown = Battle.duelDefenderCrowns(b)
+                opponentCrown = Battle.duelOpponentCrowns(b)
 
-                gameCount = len(b["team"][0]["cards"]) / 8
+                gameCount = Battle.duelGameCount(b)
 
                 if o.debugBattles:
-                    print(f'DEBUG: {b.battleClanTag(b)} {cr.reformatCRTimestamp(b["battleTime"])} '\
+                    print(f'DEBUG: {Battle.battleClanTag(b)} {cr.reformatCRTimestamp(battleTime)} '\
                         f'{cr.getPlayerName(playerTag)} duel {defenderCrown}:{opponentCrown} [{gameCount}]')
 
                 # extra validation (people can move clans, and we want only our wars to be considered!)
-                if b["team"][0]["clan"]["tag"][1:] != ct:
+                if Battle.battleClanTag(b) != ct:
                     continue # this is not for our clan!
 
-                if gameCount == 2:
-                    if(defenderCrown>opponentCrown): # won the duel
-                        player[playerTag].battlesWon += gameCount
-                else:
-                    # 3 games, 1:2 - look at the tower damage in the last one!
-                    player_towers = get_towers_count(b["team"][0])
-                    opponent_towers = get_towers_count(b["opponent"][0])
-                    if player_towers > opponent_towers:  # won the duel
-                        player[playerTag].battlesWon += 2
-                    else:
-                        player[playerTag].battlesWon += 1
+                player[playerTag].battlesWon += Battle.duelBattlesWon(b)
                     
                 player[playerTag].battlesPlayed += gameCount
                 player[playerTag].name = b["team"][0]["name"]
@@ -135,11 +123,11 @@ def populateWarGames(playerTag, startTime, player, ct, o):
                 
             elif battleType=="riverRacePvP":
                 # extra validation (people can move clans, and we want only our wars to be considered!)
-                if (o.includeOutOfClan == False) and ( b.battleClanTag(b) != ct ) :
+                if (o.includeOutOfClan == False) and ( Battle.battleClanTag(b) != ct ) :
                     continue # this is not for our clan!
 
                 if o.debugBattles:
-                    print(f'DEBUG: {b.battleClanTag(b)} {cr.reformatCRTimestamp(b["battleTime"])}'\
+                    print(f'DEBUG: {Battle.battleClanTag(b)} {cr.reformatCRTimestamp(battleTime)}'\
                         f' {cr.getPlayerName(playerTag)} 1v1')
 
 
@@ -154,7 +142,7 @@ def populateWarGames(playerTag, startTime, player, ct, o):
             else: # boatBattle
                 if b["boatBattleSide"] == "attacker":
                     if o.debugBattles:
-                        print(f'DEBUG: {b.battleClanTag(b)} {cr.reformatCRTimestamp(b["battleTime"])}'\
+                        print(f'DEBUG: {Battle.battleClanTag(b)} {cr.reformatCRTimestamp(battleTime)}'\
                         f' {cr.getPlayerName(playerTag)} boat attack')
 
 
@@ -163,7 +151,7 @@ def populateWarGames(playerTag, startTime, player, ct, o):
                 else:
                     # Our boat got attacked:
                     if o.debugBattles:
-                        print(f'DEBUG: {b.battleClanTag(b)} {cr.reformatCRTimestamp(b["battleTime"])}'\
+                        print(f'DEBUG: {Battle.battleClanTag(b)} {cr.reformatCRTimestamp(battleTime)}'\
                         f' {cr.getPlayerName(playerTag)} won={b["boatBattleWon"]}'\
                         f' new_towers_destroyed={b["newTowersDestroyed"]} boat attacked by {b["opponent"][0]["clan"]["name"]}')
                     #print (json.dumps(b, indent = 2))

@@ -2,6 +2,7 @@
 import requests
 import json
 import itertools
+from datetime import datetime
 
 
 myClanTag = "YJCGRV9" # Heavyweights

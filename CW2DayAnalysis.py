@@ -39,16 +39,13 @@ class PlayerStats:
 
 def getWarStartPrefix():
     today = datetime.utcnow()
-    # before 10 am gmt look for the previous day :)
-    today = today - timedelta(hours=9, minutes=50)
-    #today = today - timedelta(hours=10, minutes=55)
+    # the time war starts for this clan. Not sure where on earth this is available
+    warStartOffset = timedelta(hours=9, minutes=50)
 
-    timestamp = today.strftime("%Y%m%d")
-    if today.isoweekday == 1: # Monday, start of river race -> we look at 9:30
-        timestamp += "T0951"
-    else:
-        timestamp += "T0951"
-    return timestamp
+    # before about 10 am gmt look for the previous day :)
+    today = today - warStartOffset
+
+    timestamp = today.strftime("%Y%m%dT0951") # Yes, hacky, but royale API does not seem to have this info
 
 # For a list of battles gather war day statistics. 
 # Battles are already expected to be specific to a particular war day and clan

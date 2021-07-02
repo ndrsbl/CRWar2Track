@@ -1,7 +1,7 @@
 # War 2 analysis: going through partner clans and for all check
 # last 25 battles, how many are war, and show win ratio, etc.
 
-from datetime import datetime, timedelta
+from datetime import datetime, time, timedelta
 import requests
 import json
 import itertools
@@ -50,6 +50,7 @@ def getWarStartPrefix(daysBack=0):
     today = today - warStartOffset
 
     timestamp = today.strftime("%Y%m%dT0951") # Yes, hacky, but royale API does not seem to have this info
+    return timestamp
 
 # For a list of battles gather war day statistics. 
 # Battles are already expected to be specific to a particular war day and clan

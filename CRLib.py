@@ -1,7 +1,6 @@
 # Common utilas for accessing Clash Royale API
+import sys
 import requests
-import json
-import itertools
 from datetime import datetime
 
 
@@ -42,6 +41,17 @@ def clanMemberTags(ct):
     for m in members:
         tags.append(m["tag"][1:])
     return tags   
+
+def clanMemberInRiverRace(ct):
+    tags = []
+    r=requests.get("https://api.clashroyale.com/v1/clans/%23"+ct+"/currentriverrace", 
+    headers = {"Accept":"application/json", "authorization":auth}, 
+    params = {"limit":200})
+    members = r.json()["clan"]["participants"]
+    for m in members:
+        tags.append(m["tag"][1:])
+    return tags   
+
 
 
 # Given a clan tag return the clan tags in the current river race

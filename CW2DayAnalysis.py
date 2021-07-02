@@ -10,14 +10,15 @@ import CRIO as cri
 import sys
 import argparse
 import Battle
+import BattleCache
 
 
 class CROptions:
     def __init__(self):
         self.freshData = False # Do not read saved state from the data directory
         self.readOnly = False # Persist battles into the data directory
-        self.debugBattles = False # Internal, debug battles (CR keeps changing things for the war!)
         self.historical = False # Only load historical data, and do not gather this from Supercel
+        self.debugBattles = False # Internal, debug battles (CR keeps changing things for the war!)
         self.includeOutOfClan = False # Include players who are no longer in the clan (for rotation tracking)
 
 class ClanData:
@@ -49,57 +50,27 @@ def getWarStartPrefix():
         timestamp += "T0951"
     return timestamp
 
-# Per player gather war battles, and update clan level player stats
-def populateWarGames(playerTag, startTime, player, ct, o):
-    def get_towers_count(t):
-        return (1 if "kingTowerHitPoints" in t and t["kingTowerHitPoints"] else 0) + \
-               (len(t["princessTowersHitPoints"]) if "princessTowersHitPoints" in t else 0)
-
-
-    r2=requests.get("https://api.clashroyale.com/v1/players/%23"+playerTag+"/battlelog", 
-    headers = {"Accept":"application/json", "authorization":cr.auth}, 
-    params = {"limit":100})
-    battles = r2.json()
-    # if playerTag == "R0LPRUJ":
-    #     print (json.dumps(battles, indent = 2))
-        # Types are: (NOT complete, there may be many others)
-        # boatBattle
-        # casual1v1
-        # casual2v2
-        # challenge
-        # clanMate
-        # clanMate2v2
-        # friendly
-        # None
-        # PvP
-        # riverRaceDuel
-        # riverRacePvP
-        # riverRaceDuelColosseum
-        # get the last timestamp (battles are newest first)
-    if len(battles) > 0:
-        b = battles[-1]
-        if startTime <= b["battleTime"]: # this should be the oldest game
-            # TODO: CR returns a lot of garbage: it sometimes includes ancient boat battles. Could filter these out?
-            player[playerTag].limitedInfo = True
+# For a list of battles gather war day statistics. 
+# Battles are already expected to be specific to a particular war day and clan
+def getWarDayStatsForBattles(battles, o):
+    #if o.debugBattles:
+        #print(f'b["battleTime"] b["team"][0]["name"] b["type"]')
+        #print(json.dumps(b, indent = 2))
+    playerStats = dict()
 
     for b in battles:
-        #if o.debugBattles:
-            #print(f'b["battleTime"] b["team"][0]["name"] b["type"]')
-            #print(json.dumps(b, indent = 2))
-
         battleType = Battle.battleType(b)
         battleTime = Battle.battleTime(b)
-        if((battleType=="riverRaceDuel"  
+        playerTag = Battle.playerTag(b)
+        if(battleType=="riverRaceDuel"  
             or battleType=="riverRaceDuelColosseum"  
             or battleType=="riverRacePvP" 
-            or battleType=="boatBattle") and startTime <= battleTime):
-            # opponent -> crowns (compare???), team [0] crowns???
+            or battleType=="boatBattle") :
 
             # safety check in case Supercell sent stale data, or we loaded clan members from saved state, and someone
             # new joined:
-            if playerTag not in playerTag:
-                playerTag[playerTag] = PlayerStats()
-
+            if playerTag not in playerStats:
+                playerStats[playerTag] = PlayerStats()
 
             if Battle.isDuel(b): 
                 defenderCrown = Battle.duelDefenderCrowns(b)
@@ -108,36 +79,26 @@ def populateWarGames(playerTag, startTime, player, ct, o):
                 gameCount = Battle.duelGameCount(b)
 
                 if o.debugBattles:
-                    print(f'DEBUG: {Battle.battleClanTag(b)} {cr.reformatCRTimestamp(battleTime)} '\
-                        f'{cr.getPlayerName(playerTag)} duel {defenderCrown}:{opponentCrown} [{gameCount}]')
+                    print(Battle.csvBattleMessage(b))
+                    # print(f'DEBUG: {Battle.battleClanTag(b)} {cr.reformatCRTimestamp(battleTime)} '\
+                    #     f'{cr.getPlayerName(playerTag)} duel {defenderCrown}:{opponentCrown} [{gameCount}]')
 
-                # extra validation (people can move clans, and we want only our wars to be considered!)
-                if Battle.battleClanTag(b) != ct:
-                    continue # this is not for our clan!
-
-                player[playerTag].battlesWon += Battle.duelBattlesWon(b)
+                playerStats[playerTag].battlesWon += Battle.duelBattlesWon(b)
                     
-                player[playerTag].battlesPlayed += gameCount
-                player[playerTag].name = b["team"][0]["name"]
+                playerStats[playerTag].battlesPlayed += gameCount
+                playerStats[playerTag].name = b["team"][0]["name"]
                 
                 
             elif battleType=="riverRacePvP":
-                # extra validation (people can move clans, and we want only our wars to be considered!)
-                if (o.includeOutOfClan == False) and ( Battle.battleClanTag(b) != ct ) :
-                    continue # this is not for our clan!
-
                 if o.debugBattles:
-                    print(f'DEBUG: {Battle.battleClanTag(b)} {cr.reformatCRTimestamp(battleTime)}'\
-                        f' {cr.getPlayerName(playerTag)} 1v1')
+                    print(Battle.csvBattleMessage(b))
+                    # print(f'DEBUG: {Battle.battleClanTag(b)} {cr.reformatCRTimestamp(battleTime)}'\
+                    #     f' {cr.getPlayerName(playerTag)} 1v1')
 
-
-
-                defenderCrown = b["team"][0]["crowns"]
-                opponentCrown = b["opponent"][0]["crowns"]
-                if(defenderCrown>opponentCrown): # won the battle
-                    player[playerTag].battlesWon += 1
-                player[playerTag].battlesPlayed += 1 
-                player[playerTag].name = b["team"][0]["name"]
+                if Battle.PvPWon(b):
+                    playerStats[playerTag].battlesWon += 1
+                playerStats[playerTag].battlesPlayed += 1 
+                playerStats[playerTag].name = b["team"][0]["name"]
 
             else: # boatBattle
                 if b["boatBattleSide"] == "attacker":
@@ -145,50 +106,15 @@ def populateWarGames(playerTag, startTime, player, ct, o):
                         print(f'DEBUG: {Battle.battleClanTag(b)} {cr.reformatCRTimestamp(battleTime)}'\
                         f' {cr.getPlayerName(playerTag)} boat attack')
 
-
-                    player[playerTag].battlesPlayed += 1
-                    player[playerTag].boatAttacks += 1
+                    playerStats[playerTag].battlesPlayed += 1
+                    playerStats[playerTag].boatAttacks += 1
                 else:
                     # Our boat got attacked:
                     if o.debugBattles:
                         print(f'DEBUG: {Battle.battleClanTag(b)} {cr.reformatCRTimestamp(battleTime)}'\
                         f' {cr.getPlayerName(playerTag)} won={b["boatBattleWon"]}'\
                         f' new_towers_destroyed={b["newTowersDestroyed"]} boat attacked by {b["opponent"][0]["clan"]["name"]}')
-                    #print (json.dumps(b, indent = 2))
-
-# Iterate through clan members, collect clan level stats, incomplete games, player stats
-# results are saved, and information gathering is resumed if the call is run again
-def getPlayerStats(ct, warStartTime, o):
-
-    # Check if there is already a saved state available
-    # TODO: control via option
-    # TODO: log!
-    if o.freshData:
-        ts, ps = warStartTime, dict()
-    else:
-        rv = cri.loadGameState(ct, warStartTime)
-        if rv is not None:
-            (ts, ps) = rv
-        else:
-            ts, ps = warStartTime, dict()
-
-    dataCollectedAt = datetime.utcnow().strftime("%Y%m%dT%H%M") # for serialization later
-
-    # populate the player data from supercel
-    if not o.historical:
-        for m in cr.clanMemberTags(ct):
-            if not m in ps:
-                ps[m] = PlayerStats()
-            populateWarGames(m, ts, ps, ct, o)
-
-    # serialize the data and save
-    if not o.readOnly:
-        cri.saveGameState(ct, warStartTime, dataCollectedAt, ps)
-
-
-
-
-    return ps
+    return playerStats
 
 
 # Print clan's statistics for the war day (participant numbers, win ratio)
@@ -250,20 +176,6 @@ def printUsageInformation():
         """)
 
 
-# for development, eventually will get to something that will debug a single player
-def tmp_debug():
-    print("DEBUG!!")
-    warStartTime = getWarStartPrefix()
-    ts, ps = warStartTime, dict()
-    playerTag = cr.myClanTag
-    
-    o = CROptions()
-    o.debugBattles = True
-    ps[playerTag] = PlayerStats()
-
-    populateWarGames(playerTag, warStartTime, ps, cr.myClanTag, o)
-
-
 
 def main(args):
     o = CROptions()
@@ -288,32 +200,36 @@ def main(args):
 
     clanTag = cr.myClanTag
 
-    if cmd == "battles":
-        warStartTime = getWarStartPrefix()
-        pss = getPlayerStats(clanTag, warStartTime, o)
-        printWhoHasIncompleteGames(clanTag, pss)
-    elif cmd == "clan":
-        warStartTime = getWarStartPrefix()
-        pss = getPlayerStats(clanTag, warStartTime, o)
-        printClanWarDayStats(clanTag, pss)
+    warStartTime = getWarStartPrefix()  
+    bc = BattleCache.Battles()
 
+    if cmd == "battles":
+        bc.polulateWarBattlesForRiverRace(clanTag, o.freshData, o.historical, o.readOnly)
+        battles = bc.getBattlesForRiverRace(clanTag, warStartTime, None)
+        ps = getWarDayStatsForBattles(battles, o)
+        print(ps)
+        printWhoHasIncompleteGames(clanTag, ps)
+    elif cmd == "clan":
+        bc.polulateWarBattlesForRiverRace(clanTag, o.freshData, o.historical, o.readOnly)
+        battles = bc.getBattlesForRiverRace(clanTag, warStartTime, None)
+        ps = getWarDayStatsForBattles(battles, o)
+        printClanWarDayStats(clanTag, ps)
     elif cmd == "clans":
-        warStartTime = getWarStartPrefix()
         clanTags = cr.getRiverRaceClanList(clanTag)
         for ct in clanTags:
-            pss = getPlayerStats(ct, warStartTime, o)
-            printClanWarDayStats(ct, pss)
+            bc.polulateWarBattlesForRiverRace(ct, o.freshData, o.historical, o.readOnly)
+            battles = bc.getBattlesForRiverRace(ct, warStartTime, None)
+            ps = getWarDayStatsForBattles(battles, o)
+            printClanWarDayStats(ct, ps)
     elif cmd == "purge":
         # purge old historical files, but keep one per war day
         cri.purgeGameState()
-    elif cmd == "debug1":
-        tmp_debug()
     else:
         printUsageInformation()
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument('command', nargs=1, choices=['battles', 'clan', 'clans', 'purge', 'debug1'],
+    parser.add_argument('command', nargs=1, choices=['battles', 'clan', 'clans', 'purge'],
                         help='command indicating the type of war analytics to return')
     parser.add_argument('-r', '--readonly', action="store_true")
     parser.add_argument('-f', '--freshdata', action="store_true")

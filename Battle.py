@@ -1,12 +1,15 @@
 # Utility Functions to query individual battles
 
 import sys
+import json
+import CRLib as cr
 
 def battleTime(b):
     try:
         return b["battleTime"]
     except:
         print("Battle time could not be determined for this battle.", file=sys.stderr)
+        print (json.dumps(b, indent = 2), file=sys.stderr)
         return ""
 
 
@@ -15,6 +18,7 @@ def battleType(b):
         return b["type"]
     except:
         print("Battle type could not be determined for this battle.", file=sys.stderr)
+        print (json.dumps(b, indent = 2), file=sys.stderr)
         return ""
 
 
@@ -23,6 +27,13 @@ def playerName(b):
         return b["team"][0]["name"]
     except:
         print("Battle player name could not be determined for this battle.", file=sys.stderr)
+        return ""
+
+def playerTag(b):
+    try:
+        return b["team"][0]["tag"][1::]
+    except:
+        print("Battle player tag could not be determined for this battle.", file=sys.stderr)
         return ""
 
 
@@ -65,11 +76,19 @@ def duelWon(b):
 
 def duelGameCount(b):
     try:
-        return len(b["team"][0]["cards"]) / 8
+        return int(len(b["team"][0]["cards"]) / 8)
     except:
         return 0
 
 
+def csvBattleMessage(b):
+    csvLine = f'{battleClanTag(b)},{cr.reformatCRTimestamp(battleTime(b))},'\
+              f'{playerName(b)},{battleType(b)},'
+    if isDuel(b):
+        csvLine += f'{duelGameCount(b)},{duelWon(b)}'
+    else:
+        csvLine += f'1,{PvPWon(b)}'
+    return csvLine
 
         
 

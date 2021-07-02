@@ -37,10 +37,14 @@ class PlayerStats:
         self.boatAttacks = 0
         self.limitedInfo = False # only the last 25 games are available!!, this is true if first game is after war day start
 
-def getWarStartPrefix():
+
+# The timestamp of the war start from which point war battles should be considered
+# daysBack = go back a few war days
+def getWarStartPrefix(daysBack=0):
     today = datetime.utcnow()
     # the time war starts for this clan. Not sure where on earth this is available
     warStartOffset = timedelta(hours=9, minutes=50)
+    warStartOffset -= timedelta(days=daysBack)
 
     # before about 10 am gmt look for the previous day :)
     today = today - warStartOffset

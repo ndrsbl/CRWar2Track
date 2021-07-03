@@ -1,5 +1,5 @@
 # CRWar2Track
-Scripts to track Clas Royale's war 2 clan participation
+Scripts to track Clash Royale's war 2 clan participation
 
 The purpose of these scripts are to help manage an active war clan in Clash Royale.
 It shows participation during the last 24 hours, which we use to chase people to complete
@@ -45,7 +45,13 @@ It takes multiple commands: battles, clan, clans.
             Identifies all the river race clans for your clan, runs a war day statistics on them, and 
             indicates participation and win ratio for the last war day. Limited game result is available 
             from Supercel, but if you run this regularly the information from Supercel is persisted, 
-            and the accuracy of the information will be better.
+            and the accuracy of the information will be better. An example output:
+            
+                Heavyweights: 188 war battles, 108 won (57.45% win rate excl boat), 0 boat attacks, 47 participated
+                B****: 200 war battles, 138 won (69.0% win rate excl boat), 0 boat attacks, 50 participated
+                D****: 191 war battles, 89 won (46.6% win rate excl boat), 0 boat attacks, 49 participated
+                i***s: 180 war battles, 74 won (41.11% win rate excl boat), 0 boat attacks, 46 participated
+                V****: 187 war battles, 75 won (40.11% win rate excl boat), 0 boat attacks, 48 participated
 
 
 
@@ -53,11 +59,7 @@ The script will determine the start of the war day. On Mondays it is the last 9:
 on other days it is the last 10:00am GMT. 
 
 Note that only the last 25 games are available per player, so war day information may not be
-available. The script will give a warning in such cases for the player:
-
-```
-playerFoo: 2 25+ games since war start
-```
+available unless you run the script frequently enough to gather full game coverage.
 
 At the time when this script queries Supercel it saves the results, and subsequent calls to the script 
 will incrementally update the data, so regular use will improve data accuracy. The persisted data is 

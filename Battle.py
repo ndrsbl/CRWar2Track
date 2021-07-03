@@ -57,8 +57,7 @@ def PvPWon(b):
 def isDuel(b):
     try:
         bt = battleType(b)
-        if bt=="riverRaceDuel" or bt == "riverRaceDuelColosseum":
-            return True
+        return  (bt=="riverRaceDuel") or (bt == "riverRaceDuelColosseum")
     except:
         print("Battle duel type could not be determined for this battle.", file=sys.stderr)
         return False
@@ -107,7 +106,7 @@ def duelOpponentCrowns(b):
         print("Battle Duel: could not determine opponent crowns.", file=sys.stderr)
         return 0
 
-
+# The number of Duel Battles won
 def duelBattlesWon(b):
     try:
         defenderCrown = duelDefenderCrowns(b)
@@ -117,11 +116,14 @@ def duelBattlesWon(b):
             if(defenderCrown>opponentCrown): # won the duel
                 return 2
             else:
-                # 3 games, 1:2 - look at the tower damage in the last one!
-                if duelWon(b):
-                    return 2
-                else:
-                    return 1
+                return 0
+        else:
+            # 3 games, 1:2 - look at the tower damage in the last one!
+            if duelWon(b):
+                return 2
+            else:
+                return 1
     except:
+        print("error")
         return 0
     return 0

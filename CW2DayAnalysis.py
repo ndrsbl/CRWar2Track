@@ -209,7 +209,6 @@ def main(args):
         bc.polulateWarBattlesForRiverRace(clanTag, o.freshData, o.historical, o.readOnly)
         battles = bc.getBattlesForRiverRace(clanTag, warStartTime, None)
         ps = getWarDayStatsForBattles(battles, o)
-        print(ps)
         printWhoHasIncompleteGames(clanTag, ps)
     elif cmd == "clan":
         bc.polulateWarBattlesForRiverRace(clanTag, o.freshData, o.historical, o.readOnly)
